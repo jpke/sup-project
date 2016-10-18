@@ -36,11 +36,7 @@ app.post('/users', jsonParser, function(req, res) {
 });
 
 app.get('/users/:userId', function(req, res) {
-    console.log('req.params.userId: ' + req.params.userId);
     User.findOne({_id: req.params.userId}, function(err, user) {
-        console.log('user: ' + typeof(user));
-        console.log('user: ' + user);
-        console.log(Boolean(user));
         if (err) {
             return res.status(500).json({message: 'Internal Server Errror'});
         } else if (user) {
@@ -51,11 +47,40 @@ app.get('/users/:userId', function(req, res) {
     });
 });
 
-app.put('/users/:userId',jsonParser, function(req, res) {
-    User.findOneAndUpdate({_id: req.params.id}, {username: req.body.username}, {upsert: true}, function(err, user) {})
+app.put('/users/:userId', jsonParser, function(req, res) {
+    if (req.body.username) {
+        if (typeof(req.body.username) === 'string') {
+            User.findOneAndUpdate({_id: req.params.userId}, {username: req.body.username}, {upsert: true, new: true}, function(err, user) {
+                if (err) {
+                    return res.status(500).json({message: 'Internal Server Errror'});
+                }
+                res.status(200).json({});
+            });
+        } else {
+            res.status(422).json({message: 'Incorrect field type: username'});
+        }
+    } else {
+        res.status(422).json({message: 'Missing field: username'});
+    }
 });
 
-
+app.delete('/users/:userId', function(req, res) {
+    User.find({_id: req.params.userId}, function(err, user) {
+        if(err) {
+            return res.status(500).json({message: 'Internal Server Error'});
+        }
+        if(user.length > 0) {
+            User.remove({_id: req.params.userId}, function(err, confirm) {
+                if(err) {
+                   return res.status(500).json({message: 'Internal Server Error'}); 
+                }
+                res.status(200).json({});
+            });
+        } else {
+            res.status(404).json({message: 'User not found'});
+        }
+    });
+});
 
 
 var runServer = function(callback) {

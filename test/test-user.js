@@ -14,7 +14,7 @@ var should = chai.should();
 
 chai.use(chaiHttp);
 
-describe('User endpoints', function() {
+describe.only('User endpoints', function() {
     beforeEach(function(done) {
         // Clear the database
         mongoose.connection.db.dropDatabase(done);
@@ -196,7 +196,7 @@ describe('User endpoints', function() {
                         res.should.have.status(200);
                         res.type.should.equal('application/json');
                         res.charset.should.equal('utf-8');
-                        console.log("res.body: " + res.body);
+                        //console.log("res.body: " + res.body);
                         res.body.should.be.an('object');
                         res.body.should.have.property('username');
                         res.body.username.should.be.a('string');
@@ -241,6 +241,7 @@ describe('User endpoints', function() {
                     })
                     .then(function(res) {
                         // Check that the user has been updated
+                        console.log("res: " + res);
                         should.exist(res);
                         res.should.have.property('username');
                         res.username.should.be.a('string');
