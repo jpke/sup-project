@@ -22,20 +22,18 @@ app.get('/users', function(req, res) {
 });
 
 app.post('/users', jsonParser, function(req, res) {
-    if (req.body.username) {
-        if (typeof(req.body.username) === 'string') {
-            User.create({username: req.body.username}, function(err, users) {
-                if (err) {
-                    return res.status(500).json({message: 'Internal Server Errror'});
-                }
-                res.status(201).set('location', `/users/${users._id}`).json({});
-            });
-        } else {
-            res.status(422).json({message: 'Incorrect field type: username'});
-        }
-    } else {
-        res.status(422).json({message: 'Missing field: username'});
+    if (!req.body.username) {
+        return res.status(422).json({message: 'Missing field: username'});
     }
+    if (typeof(req.body.username) !== 'string') {
+        return res.status(422).json({message: 'Incorrect field type: username'});
+    }
+    User.create({username: req.body.username}, function(err, user) {
+        if (err) {
+            return res.status(500).json({message: 'Internal Server Errror'});
+        }
+        res.status(201).set('location', `/users/${user._id}`).json({});
+    });
 });
 
 app.get('/users/:userId', function(req, res) {
@@ -95,6 +93,16 @@ app.get('/messages', function(req, res) {
         res.status(200).json(messages);
     });
 });
+
+app.post('/messages', jsonParser, function(req, res) {
+    Message.create(req.body, function(err, message) {
+        if(err){
+            return res.status(500).json({message: 'Internal Server Error'});            
+        }
+        res.status(201).set('location', `/messages/${message._id}`).json({});
+    });
+});
+
 
 
 var runServer = function(callback) {
