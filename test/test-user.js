@@ -196,6 +196,7 @@ describe('User endpoints', function() {
                         res.should.have.status(200);
                         res.type.should.equal('application/json');
                         res.charset.should.equal('utf-8');
+                        console.log("res.body: " + res.body);
                         res.body.should.be.an('object');
                         res.body.should.have.property('username');
                         res.body.username.should.be.a('string');
