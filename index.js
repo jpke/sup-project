@@ -7,8 +7,11 @@ var app = express();
 var jsonParser = bodyParser.json();
 
 var User = require('./models/user');
+var Message = require('./models/message');
 
 // Add your API endpoints here
+
+//users
 app.get('/users', function(req, res) {
     User.find(function(err, users) {
         if (err) {
@@ -79,6 +82,28 @@ app.delete('/users/:userId', function(req, res) {
         } else {
             res.status(404).json({message: 'User not found'});
         }
+    });
+});
+
+//messages
+app.get('/messages', function(req, res) {
+    Message.find(function(err, messages){
+        if(err) {
+            return res.status(500).json({message: 'Internal Server Error'});
+        }
+        var messagesArray = [];
+        messages.forEach((message) => {
+            var keyValueObject = {};
+            console.log("message " + message);
+            for(var key in message) {
+                keyValueObject[key].text = message.text;
+                keyValueObject[key].from = message.from;
+                keyValueObject[key].to = message.to;
+            }
+            messagesArray.push(keyValueObject);
+        });
+        console.log("messageArray: " + messagesArray);
+        res.status(200).json(messagesArray);
     });
 });
 

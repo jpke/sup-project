@@ -15,7 +15,7 @@ var should = chai.should();
 
 chai.use(chaiHttp);
 
-describe('Message endpoints', function() {
+describe.only('Message endpoints', function() {
     var server;
     beforeEach(function(done) {
         this.listPattern = new UrlPattern('/messages');
@@ -99,6 +99,7 @@ describe('Message endpoints', function() {
                 }.bind(this))
                 .then(function(res) {
                     // Check that the messages are in the array
+                    console.log("res.body: " + res.body);
                     res.should.have.status(200);
                     res.type.should.equal('application/json');
                     res.charset.should.equal('utf-8');
@@ -106,6 +107,7 @@ describe('Message endpoints', function() {
                     res.body.length.should.equal(3);
 
                     var message = res.body[0];
+                    console.log("res.body[0]: " + res.body[0]);
                     message.should.be.an('object');
                     message.should.have.property('text');
                     message.text.should.be.a('string');
