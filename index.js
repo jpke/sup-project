@@ -87,23 +87,12 @@ app.delete('/users/:userId', function(req, res) {
 
 //messages
 app.get('/messages', function(req, res) {
-    Message.find(function(err, messages){
+    console.log('req.query ', req.query);
+    Message.find(req.query).populate('from to').exec(function(err, messages){
         if(err) {
             return res.status(500).json({message: 'Internal Server Error'});
         }
-        var messagesArray = [];
-        messages.forEach((message) => {
-            var keyValueObject = {};
-            console.log("message " + message);
-            for(var key in message) {
-                keyValueObject[key].text = message.text;
-                keyValueObject[key].from = message.from;
-                keyValueObject[key].to = message.to;
-            }
-            messagesArray.push(keyValueObject);
-        });
-        console.log("messageArray: " + messagesArray);
-        res.status(200).json(messagesArray);
+        res.status(200).json(messages);
     });
 });
 
