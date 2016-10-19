@@ -70,16 +70,15 @@ app.delete('/users/:userId', function(req, res) {
         if(err) {
             return res.status(500).json({message: 'Internal Server Error'});
         }
-        if(user.length > 0) {
-            User.remove({_id: req.params.userId}, function(err, confirm) {
-                if(err) {
-                   return res.status(500).json({message: 'Internal Server Error'}); 
-                }
-                res.status(200).json({});
-            });
-        } else {
-            res.status(404).json({message: 'User not found'});
+        if(user.length === 0) {
+            return res.status(404).json({message: 'User not found'});
         }
+        User.remove({_id: req.params.userId}, function(err, confirm) {
+            if(err) {
+               return res.status(500).json({message: 'Internal Server Error'}); 
+            }
+            res.status(200).json({});
+        });
     });
 });
 
@@ -95,14 +94,53 @@ app.get('/messages', function(req, res) {
 });
 
 app.post('/messages', jsonParser, function(req, res) {
-    Message.create(req.body, function(err, message) {
-        if(err){
-            return res.status(500).json({message: 'Internal Server Error'});            
+    if (!req.body.text) {
+        return res.status(422).json({message: 'Missing field: text'});
+    }
+    if (typeof(req.body.text) !== 'string') {
+        return res.status(422).json({message: 'Incorrect field type: text'});
+    }
+    if (typeof(req.body.to) !== 'string') {
+        return res.status(422).json({message: 'Incorrect field type: to'});
+    }
+    if (typeof(req.body.from) !== 'string') {
+        return res.status(422).json({message: 'Incorrect field type: from'});
+    }
+    User.find({_id: req.body.from}, function(err, user) {
+        if(err) {
+            return res.status(500).json({message: 'Internal Server Error'});
         }
-        res.status(201).set('location', `/messages/${message._id}`).json({});
+        if(user.length === 0) {
+            return res.status(422).json({message: 'Incorrect field value: from'});
+        }
+        User.find({_id: req.body.to}, function(err, user) {
+            if(err) {
+                return res.status(500).json({message: 'Internal Server Error'});
+            }
+            if(user.length === 0) {
+                return res.status(422).json({message: 'Incorrect field value: to'});
+            }
+            Message.create(req.body, function(err, message) {
+                if(err) {
+                    return res.status(500).json({message: 'Internal Server Error'});            
+                }
+                res.status(201).set('location', `/messages/${message._id}`).json({});
+            });
+        });
     });
 });
 
+app.get('/messages/:messageId', function(req, res) {
+    Message.findOne({_id: req.params.messageId}).populate('from to').exec( function(err, message) {
+        if(err) {
+            return res.status(500).json({message: 'Internal Server Error'});            
+        } 
+        if (!message) {
+            return res.status(404).json({message: 'Message not found'});
+        }
+        return res.status(200).json(message);
+    });
+});
 
 
 var runServer = function(callback) {
