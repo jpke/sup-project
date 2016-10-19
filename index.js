@@ -103,27 +103,25 @@ app.post('/messages', jsonParser, function(req, res) {
     if (typeof(req.body.from) !== 'string') {
         return res.status(422).json({message: 'Incorrect field type: from'});
     }
-    User.find({_id: req.body.from}, function(err, user) {
-        if(err) {
-            return res.status(500).json({message: 'Internal Server Error'});
-        }
+    User.find({_id: req.body.from})
+    .then(function(user) {
         if(user.length === 0) {
-            return res.status(422).json({message: 'Incorrect field value: from'});
+            throw res.status(422).json({message: 'Incorrect field value: from'});
         }
-        User.find({_id: req.body.to}, function(err, user) {
-            if(err) {
-                return res.status(500).json({message: 'Internal Server Error'});
-            }
-            if(user.length === 0) {
-                return res.status(422).json({message: 'Incorrect field value: to'});
-            }
-            Message.create(req.body, function(err, message) {
-                if(err) {
-                    return res.status(500).json({message: 'Internal Server Error'});            
-                }
-                res.status(201).set('location', `/messages/${message._id}`).json({});
-            });
-        });
+        return User.find({_id: req.body.to});
+    }).then(function(user) {
+        console.log("USER IS:", user);
+        if(user.length === 0) {
+            throw res.status(422).json({message: 'Incorrect field value: to'});
+        } 
+        return Message.create(req.body);
+    }).then(function(message) {
+        res.status(201).set('location', `/messages/${message._id}`).json({});
+    }).catch(function(errOrRes) {
+        // threw res to break promise chain
+        if(errOrRes == res) return;
+        console.error("500 error", errOrRes);
+        return res.status(500).json({message: 'Internal Server Error'});            
     });
 });
 
