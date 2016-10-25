@@ -50,7 +50,7 @@ passport.use(strategy);
 app.use(passport.initialize());
 
 app.get('/users', passport.authenticate('basic', {session:false}), function(req, res) {
-    User.find(function(err, users) {
+    User.find().select('_id username').exec(function(err, users) {
         if (err) {
             return res.status(500).json({message: 'Internal Server Errror'});
         }
@@ -66,6 +66,7 @@ app.post('/users', jsonParser, function(req, res) {
     }
 
     if (!('username' in req.body)) {
+        console.log(req.body);
         return res.status(422).json({
             message: 'Missing field: username'
         });
@@ -86,56 +87,62 @@ app.post('/users', jsonParser, function(req, res) {
             message: 'Incorrect field length: username'
         });
     }
-
-    if (!('password' in req.body)) {
-        return res.status(422).json({
-            message: 'Missing field: password'
-        });
-    }
-
-    var password = req.body.password;
-
-    if (typeof password !== 'string') {
-        return res.status(422).json({
-            message: 'Incorrect field type: password'
-        });
-    }
-
-    password = password.trim();
-
-    if (password === '') {
-        return res.status(422).json({
-            message: 'Incorrect field length: password'
-        });
-    }
-
-    bcrypt.genSalt(10, function(err, salt) {
-        if (err) {
-            return res.status(500).json({
-                message: 'Internal server error'
-            });
+    
+    User.findOne({username: username}).then(result => {
+        if (result) {
+            return res.status(409).json({message: 'username already exists'});
         }
 
-        bcrypt.hash(password, salt, function(err, hash) {
+        if (!('password' in req.body)) {
+            return res.status(422).json({
+                message: 'Missing field: password'
+            });
+        }
+    
+        var password = req.body.password;
+    
+        if (typeof password !== 'string') {
+            return res.status(422).json({
+                message: 'Incorrect field type: password'
+            });
+        }
+    
+        password = password.trim();
+    
+        if (password === '') {
+            return res.status(422).json({
+                message: 'Incorrect field length: password'
+            });
+        }
+    
+        bcrypt.genSalt(10, function(err, salt) {
             if (err) {
                 return res.status(500).json({
                     message: 'Internal server error'
                 });
             }
-
-            var user = new User({
-                username: username,
-                password: hash
-            });
-
-            user.save(function(err) {
+    
+            bcrypt.hash(password, salt, function(err, hash) {
                 if (err) {
                     return res.status(500).json({
                         message: 'Internal server error'
                     });
                 }
-
-                return res.status(201).json({});
+    
+                var user = new User({
+                    username: username,
+                    password: hash
+                });
+    
+                user.save(function(err) {
+                    if (err) {
+                        return res.status(500).json({
+                            message: 'Internal server error'
+                        });
+                    }
+    
+                    return res.status(201).set('location', `/users/${user._id}`).json({});
+                });
             });
         });
     });
@@ -147,6 +154,7 @@ app.get('/users/:userId', passport.authenticate('basic', {session: false}), func
             return res.status(500).json({message: 'Internal Server Errror'});
         }
         if (user) {
+            console.log("user ", user);
             return res.status(200).json(user);
         }
         return res.status(404).json({message: 'User not found'});
@@ -195,7 +203,6 @@ app.get('/messages', passport.authenticate('basic', {session: false}), function(
         if(err) {
             return res.status(500).json({message: 'Internal Server Error'});
         }
-        console.log(messages);
         res.status(200).json(messages);
     });
 });
@@ -215,22 +222,19 @@ app.post('/messages', jsonParser, passport.authenticate('basic', {session: false
     }
     var from;
     var to;
-    User.find({username: req.body.from})
+    User.find({_id: req.body.from})
     .then(function(user) {
         if(user.length === 0) {
             throw res.status(422).json({message: 'Incorrect field value: from'});
         }
-        from = user[0]._id;
-        return User.find({username: req.body.to});
+        return User.find({_id: req.body.to});
     }).then(function(user) {
-        console.log("USER IS:", user);
         if(user.length === 0) {
             throw res.status(422).json({message: 'Incorrect field value: to'});
         } 
-        to = user[0]._id;
-        return Message.create({to: to, from: from, text: req.body.text});
+        return Message.create({to: req.body.to, from: req.body.from, text: req.body.text});
     }).then(function(message) {
-        res.status(201).set('location', `/messages/${message._id}`).json({});
+        res.status(201).set('location', `/messages/${message._id}`).json({messsage: "Message Sent"});
     }).catch(function(errOrRes) {
         // threw res to break promise chain
         if(errOrRes == res) return;
@@ -278,4 +282,3 @@ if (require.main === module) {
 
 exports.app = app;
 exports.runServer = runServer;
-

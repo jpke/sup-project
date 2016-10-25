@@ -25,17 +25,20 @@ describe('Message endpoints', function() {
             // Add three example users
             this.alice = {
                 username: 'alice',
-                _id: 'aaaaaaaaaaaaaaaaaaaaaaaa'
+                _id: 'aaaaaaaaaaaaaaaaaaaaaaaa',
+                password: 'AAAA'
             };
 
             this.bob = {
                 username: 'bob',
-                _id: 'bbbbbbbbbbbbbbbbbbbbbbbb'
+                _id: 'bbbbbbbbbbbbbbbbbbbbbbbb',
+                password: 'BBBB'
             };
 
             this.chuck = {
                 username: 'chuck',
-                _id: 'cccccccccccccccccccccccc'
+                _id: 'cccccccccccccccccccccccc',
+                password: 'CCCC'
             };
 
             // Create users
