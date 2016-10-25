@@ -15,7 +15,7 @@ var should = chai.should();
 
 chai.use(chaiHttp);
 
-describe('Message endpoints', function() {
+describe.only('Message endpoints', function() {
     var server;
     beforeEach(function(done) {
         this.listPattern = new UrlPattern('/messages');
@@ -46,7 +46,10 @@ describe('Message endpoints', function() {
             var promiseB = new User(this.bob).save();
             var promiseC = new User(this.chuck).save();
             Promise.all([promiseA, promiseB, promiseC]).then(function() {
-                done();
+                User.find().then((results) => {
+                    done();
+                });
+                // done();
             });
         }.bind(this));
     });
@@ -55,16 +58,20 @@ describe('Message endpoints', function() {
         describe('GET', function() {
             it('should return an empty list of messages initially', function() {
                 // Get the list of messages
-                return chai.request(app)
-                    .get(this.listPattern.stringify())
-                    .then(function(res) {
-                        // Check that it's an empty array
-                        res.should.have.status(200);
-                        res.type.should.equal('application/json');
-                        res.charset.should.equal('utf-8');
-                        res.body.should.be.an('array');
-                        res.body.length.should.equal(0);
-                    });
+                User.find()
+                .then(() => {
+                    return chai.request(app)
+                        .get(this.listPattern.stringify())
+                        .auth('alice', 'AAAA')
+                        .then(function(res) {
+                            // Check that it's an empty array
+                            res.should.have.status(200);
+                            res.type.should.equal('application/json');
+                            res.charset.should.equal('utf-8');
+                            res.body.should.be.an('array');
+                            res.body.length.should.equal(0);
+                        });
+                });
             });
 
             it('should return a list of messages', function() {
@@ -96,59 +103,63 @@ describe('Message endpoints', function() {
                     return messageC.save();
                 })
                 .then(function(res) {
-                    // Get the list of messages
-                    return chai.request(app)
-                        .get(this.listPattern.stringify());
-                }.bind(this))
-                .then(function(res) {
-                    // Check that the messages are in the array
-                    console.log("res.body: " + res.body);
-                    res.should.have.status(200);
-                    res.type.should.equal('application/json');
-                    res.charset.should.equal('utf-8');
-                    res.body.should.be.an('array');
-                    res.body.length.should.equal(3);
-
-                    var message = res.body[0];
-                    console.log("res.body[0]: " + res.body[0]);
-                    message.should.be.an('object');
-                    message.should.have.property('text');
-                    message.text.should.be.a('string');
-                    message.text.should.equal(messageA.text);
-                    message.should.have.property('to');
-                    message.from.should.be.an('object');
-                    message.from.should.have.property('username');
-                    message.from.username.should.equal(this.alice.username);
-                    message.to.should.be.an('object');
-                    message.to.should.have.property('username');
-                    message.to.username.should.equal(this.bob.username);
-
-                    var message = res.body[1];
-                    message.should.be.an('object');
-                    message.should.have.property('text');
-                    message.text.should.be.a('string');
-                    message.text.should.equal(messageB.text);
-                    message.should.have.property('to');
-                    message.from.should.be.an('object');
-                    message.from.should.have.property('username');
-                    message.from.username.should.equal(this.alice.username);
-                    message.to.should.be.an('object');
-                    message.to.should.have.property('username');
-                    message.to.username.should.equal(this.chuck.username);
-
-                    var message = res.body[2];
-                    message.should.be.an('object');
-                    message.should.have.property('text');
-                    message.text.should.be.a('string');
-                    message.text.should.equal(messageC.text);
-                    message.should.have.property('to');
-                    message.from.should.be.an('object');
-                    message.from.should.have.property('username');
-                    message.from.username.should.equal(this.bob.username);
-                    message.to.should.be.an('object');
-                    message.to.should.have.property('username');
-                    message.to.username.should.equal(this.chuck.username);
-                }.bind(this));
+                    Message.find().then(() => {
+                            // Get the list of messages
+                            return chai.request(app)
+                                .get(this.listPattern.stringify())
+                                .auth('alice', 'AAAA')
+                        // .bind(this))
+                        .then(function(res) {
+                            // Check that the messages are in the array
+                            console.log("res.body: " + res.body);
+                            res.should.have.status(200);
+                            res.type.should.equal('application/json');
+                            res.charset.should.equal('utf-8');
+                            res.body.should.be.an('array');
+                            res.body.length.should.equal(3);
+        
+                            var message = res.body[0];
+                            console.log("res.body[0]: " + res.body[0]);
+                            message.should.be.an('object');
+                            message.should.have.property('text');
+                            message.text.should.be.a('string');
+                            message.text.should.equal(messageA.text);
+                            message.should.have.property('to');
+                            message.from.should.be.an('object');
+                            message.from.should.have.property('username');
+                            message.from.username.should.equal(this.alice.username);
+                            message.to.should.be.an('object');
+                            message.to.should.have.property('username');
+                            message.to.username.should.equal(this.bob.username);
+        
+                            var message = res.body[1];
+                            message.should.be.an('object');
+                            message.should.have.property('text');
+                            message.text.should.be.a('string');
+                            message.text.should.equal(messageB.text);
+                            message.should.have.property('to');
+                            message.from.should.be.an('object');
+                            message.from.should.have.property('username');
+                            message.from.username.should.equal(this.alice.username);
+                            message.to.should.be.an('object');
+                            message.to.should.have.property('username');
+                            message.to.username.should.equal(this.chuck.username);
+        
+                            var message = res.body[2];
+                            message.should.be.an('object');
+                            message.should.have.property('text');
+                            message.text.should.be.a('string');
+                            message.text.should.equal(messageC.text);
+                            message.should.have.property('to');
+                            message.from.should.be.an('object');
+                            message.from.should.have.property('username');
+                            message.from.username.should.equal(this.bob.username);
+                            message.to.should.be.an('object');
+                            message.to.should.have.property('username');
+                            message.to.username.should.equal(this.chuck.username);
+                        }.bind(this));
+                    });
+                });
             });
             it('should allow filtering by from', function() {
                 var messageA = {
@@ -179,45 +190,54 @@ describe('Message endpoints', function() {
                     return messageC.save();
                 })
                 .then(function(res) {
-                    // Get the list of messages from Alice
-                    var url = this.listPattern.stringify() + '?from=' + this.alice._id;
-                    return chai.request(app)
-                        .get(url);
-                }.bind(this))
-                .then(function(res) {
-                    // Check that the correct messages are in the array
-                    res.should.have.status(200);
-                    res.type.should.equal('application/json');
-                    res.charset.should.equal('utf-8');
-                    res.body.should.be.an('array');
-                    res.body.length.should.equal(2);
-
-                    var message = res.body[0];
-                    message.should.be.an('object');
-                    message.should.have.property('text');
-                    message.text.should.be.a('string');
-                    message.text.should.equal(messageA.text);
-                    message.should.have.property('to');
-                    message.from.should.be.an('object');
-                    message.from.should.have.property('username');
-                    message.from.username.should.equal(this.alice.username);
-                    message.to.should.be.an('object');
-                    message.to.should.have.property('username');
-                    message.to.username.should.equal(this.bob.username);
-
-                    var message = res.body[1];
-                    message.should.be.an('object');
-                    message.should.have.property('text');
-                    message.text.should.be.a('string');
-                    message.text.should.equal(messageB.text);
-                    message.should.have.property('to');
-                    message.from.should.be.an('object');
-                    message.from.should.have.property('username');
-                    message.from.username.should.equal(this.alice.username);
-                    message.to.should.be.an('object');
-                    message.to.should.have.property('username');
-                    message.to.username.should.equal(this.chuck.username);
-                }.bind(this));
+                    Message.find().then(() => {
+                            // Get the list of messages
+                            return chai.request(app)
+                                .get(this.listPattern.stringify())
+                                .auth('alice', 'AAAA')
+                        // .bind(this))
+                            .then(function(res) {
+                            // Get the list of messages from Alice
+                            var url = this.listPattern.stringify() + '?from=' + this.alice._id;
+                            return chai.request(app)
+                                .get(url)
+                        .then(function(res) {
+                            // Check that the correct messages are in the array
+                            res.should.have.status(200);
+                            res.type.should.equal('application/json');
+                            res.charset.should.equal('utf-8');
+                            res.body.should.be.an('array');
+                            res.body.length.should.equal(2);
+        
+                            var message = res.body[0];
+                            message.should.be.an('object');
+                            message.should.have.property('text');
+                            message.text.should.be.a('string');
+                            message.text.should.equal(messageA.text);
+                            message.should.have.property('to');
+                            message.from.should.be.an('object');
+                            message.from.should.have.property('username');
+                            message.from.username.should.equal(this.alice.username);
+                            message.to.should.be.an('object');
+                            message.to.should.have.property('username');
+                            message.to.username.should.equal(this.bob.username);
+        
+                            var message = res.body[1];
+                            message.should.be.an('object');
+                            message.should.have.property('text');
+                            message.text.should.be.a('string');
+                            message.text.should.equal(messageB.text);
+                            message.should.have.property('to');
+                            message.from.should.be.an('object');
+                            message.from.should.have.property('username');
+                            message.from.username.should.equal(this.alice.username);
+                            message.to.should.be.an('object');
+                            message.to.should.have.property('username');
+                            message.to.username.should.equal(this.chuck.username);
+                        }.bind(this));
+                        });
+                    });
+                });
             });
             it('should allow filtering by to', function() {
                 var messageA = {
@@ -248,46 +268,61 @@ describe('Message endpoints', function() {
                     return messageC.save();
                 })
                 .then(function(res) {
-                    // Get the list of messages to Chuck
-                    var url = this.listPattern.stringify() + '?to=' + this.chuck._id;
-                    return chai.request(app)
-                        .get(url);
-                }.bind(this))
-                .then(function(res) {
-                    // Check that the correct messages are in the array
-                    res.should.have.status(200);
-                    res.type.should.equal('application/json');
-                    res.charset.should.equal('utf-8');
-                    res.body.should.be.an('array');
-                    res.body.length.should.equal(2);
-
-                    var message = res.body[0];
-                    message.should.be.an('object');
-                    message.should.have.property('text');
-                    message.text.should.be.a('string');
-                    message.text.should.equal(messageB.text);
-                    message.should.have.property('to');
-                    message.from.should.be.an('object');
-                    message.from.should.have.property('username');
-                    message.from.username.should.equal(this.alice.username);
-                    message.to.should.be.an('object');
-                    message.to.should.have.property('username');
-                    message.to.username.should.equal(this.chuck.username);
-
-                    var message = res.body[1];
-                    message.should.be.an('object');
-                    message.should.have.property('text');
-                    message.text.should.be.a('string');
-                    message.text.should.equal(messageC.text);
-                    message.should.have.property('to');
-                    message.from.should.be.an('object');
-                    message.from.should.have.property('username');
-                    message.from.username.should.equal(this.bob.username);
-                    message.to.should.be.an('object');
-                    message.to.should.have.property('username');
-                    message.to.username.should.equal(this.chuck.username);
-                }.bind(this));
+                    Message.find().then(() => {
+                            // Get the list of messages
+                            return chai.request(app)
+                                .get(this.listPattern.stringify())
+                                .auth('alice', 'AAAA')
+                        // .bind(this))
+                            .then(function(res) {
+                            // Get the list of messages from Alice
+                            var url = this.listPattern.stringify() + '?from=' + this.alice._id;
+                            return chai.request(app)
+                                .get(url)
+                        .then(function(res) {
+                            // Get the list of messages to Chuck
+                            var url = this.listPattern.stringify() + '?to=' + this.chuck._id;
+                            return chai.request(app)
+                                .get(url)
+                        .then(function(res) {
+                            // Check that the correct messages are in the array
+                            res.should.have.status(200);
+                            res.type.should.equal('application/json');
+                            res.charset.should.equal('utf-8');
+                            res.body.should.be.an('array');
+                            res.body.length.should.equal(2);
+        
+                            var message = res.body[0];
+                            message.should.be.an('object');
+                            message.should.have.property('text');
+                            message.text.should.be.a('string');
+                            message.text.should.equal(messageB.text);
+                            message.should.have.property('to');
+                            message.from.should.be.an('object');
+                            message.from.should.have.property('username');
+                            message.from.username.should.equal(this.alice.username);
+                            message.to.should.be.an('object');
+                            message.to.should.have.property('username');
+                            message.to.username.should.equal(this.chuck.username);
+        
+                            var message = res.body[1];
+                            message.should.be.an('object');
+                            message.should.have.property('text');
+                            message.text.should.be.a('string');
+                            message.text.should.equal(messageC.text);
+                            message.should.have.property('to');
+                            message.from.should.be.an('object');
+                            message.from.should.have.property('username');
+                            message.from.username.should.equal(this.bob.username);
+                            message.to.should.be.an('object');
+                            message.to.should.have.property('username');
+                            message.to.username.should.equal(this.chuck.username);
+                        }.bind(this));
+                        });
+                    });
+                });
             });
+        });
             it('should allow filtering by from and to', function() {
                 var messageA = {
                     from: this.alice._id,
@@ -317,34 +352,38 @@ describe('Message endpoints', function() {
                     return messageC.save();
                 })
                 .then(function(res) {
-                    // Get the list of messages from Alice to Bob
-                    var url = this.listPattern.stringify() +
-                              '?from=' + this.alice._id +
-                              '&to=' + this.bob._id;
-                    return chai.request(app)
-                        .get(url);
-                }.bind(this))
-                .then(function(res) {
-                    // Check that the correct messages are in the array
-                    res.should.have.status(200);
-                    res.type.should.equal('application/json');
-                    res.charset.should.equal('utf-8');
-                    res.body.should.be.an('array');
-                    res.body.length.should.equal(1);
-
-                    var message = res.body[0];
-                    message.should.be.an('object');
-                    message.should.have.property('text');
-                    message.text.should.be.a('string');
-                    message.text.should.equal(messageA.text);
-                    message.should.have.property('to');
-                    message.from.should.be.an('object');
-                    message.from.should.have.property('username');
-                    message.from.username.should.equal(this.alice.username);
-                    message.to.should.be.an('object');
-                    message.to.should.have.property('username');
-                    message.to.username.should.equal(this.bob.username);
-                }.bind(this));
+                    return Message.find({})
+                }).then(() => {
+                        console.log("This is running");
+                            // Get the list of messages from Alice to Bob
+                            var url = this.listPattern.stringify() +
+                                      '?from=' + this.alice._id +
+                                      '&to=' + this.bob._id;
+                            console.log('THIS IS THE URL:::', url);
+                            return chai.request(app)
+                                .get(url)
+                         }.bind(this))
+                }).then(function(res) {
+                            // Check that the correct messages are in the array
+                            res.should.have.status(200);
+                            res.type.should.equal('application/json');
+                            res.charset.should.equal('utf-8');
+                            res.body.should.be.an('array');
+                            res.body.length.should.equal(1);
+        
+                            var message = res.body[0];
+                            message.should.be.an('object');
+                            message.should.have.property('text');
+                            message.text.should.be.a('string');
+                            message.text.should.equal(messageA.text);
+                            message.should.have.property('to');
+                            message.from.should.be.an('object');
+                            message.from.should.have.property('username');
+                            message.from.username.should.equal(this.alice.username);
+                            message.to.should.be.an('object');
+                            message.to.should.have.property('username');
+                            message.to.username.should.equal(this.bob.username);
+                        }.bind(this));
             });
         });
         describe('POST', function() {
