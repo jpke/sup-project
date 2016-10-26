@@ -14,6 +14,7 @@ var BasicStrategy = require('passport-http').BasicStrategy;
 
 // Add your API endpoints here
 
+
 //users---------------------------------------------------------------------------
 var strategy = new BasicStrategy(function(username, password, callback) {
     User.findOne({
