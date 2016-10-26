@@ -8,3 +8,10 @@ addons:
     - mongodb-3.2-precise
     packages:
     - mongodb-org-server
+deploy:
+  provider: heroku
+  api_key:
+    secure: Al9cK8v16g+Tn39QpXbxDy1eHjSxkzudUVbRFqAEDImGOuBpLgxbeyLeR8i/sT877wqx4PFTRJcMPjSXdwciE8sJp4zwFTYUsia5V14CK9vfMFVbKHkEQOQSyeSds8bl7Xz2VAGEj7+TKoURTCM2zLrYkUJcptG/1SBlGza8i5feySjNOy4iVAc0OSpnN+g19L3+gDGgKMaz6ai3N72oCij5K6aJ3dtA6n/vVsnwAsZdWtR7AiEUnycZwM4dJjw7Y3+U5FLAcoQUMC7tvBSBhkoF9ICllSNvDHoTYB90sq3OujewXOg1QlI/Ez0bp4Zsy7mbd5zzeiS23vQsia85FZCsTJi+T/6u/F5W0F4F5mapkcyF9p6xwjUqTVDzjRklPCwJ9bMOOrKWzjS4Xtbv1vHYAFwXReZAxPhnHeJ0z06BnHlVz9sxnga/b+DVXDpE1MNa10eYaOqHwKDy3fAjflXKYExTfpf1AN4mg94srM24dkm5aWjN+OwNRWz9C5nj/N9CQwC1VPQZn6ZgyBYqi+aug6uRH3dwi7HUQPf1wf0xGxsrKSsf4yeRkXcfVl0aDSx3/yVQpt7lVlFSYNuBSdP7K7bg5EKE7kLJ6SzrC++sFXxZJ2vMkUK+xOFsYVL/EnPyAHL2GtczjweQTUmkt4sEipVSwmxhj7ENJ+XHVd0=
+  app: vast-harbor-68591
+  on:
+    repo: jpke/sup-project
